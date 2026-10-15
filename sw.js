@@ -1,4 +1,12 @@
-var C='math-v5',F=['./','index.html','style.css','kanji.js','app.js','problems.js','manga.js','manifest.json','icon-192.png','icon-512.png','img/t2/p1-1.webp','img/t2/p1-2.webp','img/t2/p1-3.webp','img/t2/p2-1.webp','img/t2/p2-2.webp','img/t2/p2-3.webp','img/t2/p3-1.webp','img/t2/p3-2.webp','img/t2/p3-3.webp','img/t2/p4-1.webp','img/t2/p4-2.webp','img/t2/p4-3.webp'];
-self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(F)}));self.skipWaiting()});
-self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C}).map(function(x){return caches.delete(x)}))}))});
-self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(r){return r||fetch(e.request)}))});
+var V='v6',C='math-'+V,IMG=[];for(var p=1;p<=4;p++)for(var n=1;n<=3;n++)IMG.push('img/t2/p'+p+'-'+n+'.webp');
+var CORE=['./','index.html','style.css?v=6','kanji.js?v=6','problems.js?v=6','manga.js?v=6','app.js?v=6','manifest.json','icon-192.png','icon-512.png'];
+self.addEventListener('install',function(e){self.skipWaiting();e.waitUntil(caches.open(C).then(function(c){return c.addAll(CORE.concat(IMG).map(function(u){return new Request(u,{cache:'reload'})}))}))});
+self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
+self.addEventListener('fetch',function(e){var r=e.request;if(r.method!=='GET')return;
+ var u=new URL(r.url);if(u.origin!==location.origin)return;
+ if(/\.(webp|png|jpg|jpeg|gif|svg)$/i.test(u.pathname)){
+  e.respondWith(caches.match(r).then(function(m){return m||fetch(r).then(function(res){var cp=res.clone();caches.open(C).then(function(c){c.put(r,cp)});return res})}));return}
+ // HTML/JS/CSS/manifest: ネットワーク優先、オフライン時はキャッシュ
+ e.respondWith(fetch(r,{cache:'no-store'}).then(function(res){if(res&&res.ok){var cp=res.clone();caches.open(C).then(function(c){c.put(r,cp)})}return res})
+  .catch(function(){return caches.match(r).then(function(m){return m||caches.match(r,{ignoreSearch:true})||caches.match('index.html')}).then(function(m){return m||caches.match('index.html')})}));
+});

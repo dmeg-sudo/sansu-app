@@ -1,5 +1,5 @@
 (function(){
-var app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
+var APP_VERSION='v6',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
 function load(){try{return JSON.parse(localStorage.getItem('mathapp'))||{}}catch(e){return {}}}
 function save(d){try{localStorage.setItem('mathapp',JSON.stringify(d))}catch(e){}}
 var D=load();
@@ -21,7 +21,7 @@ function el(h){app.innerHTML=h}
 function btn(t,cls,fn){var b=document.createElement('button');b.className='btn '+(cls||'');b.innerHTML=T(t);b.onclick=fn;return b}
 function mstars(p){var n=0;for(var k in p.manga)n+=p.manga[k];return n}
 function home(){
- el('<h1>'+T('かんがえる {教室|きょうしつ}')+'</h1><p style="text-align:center">'+T('だれが やるかな？')+'</p><div class="chips" id="who"></div><div id="menu"></div>');
+ el('<h1>'+T('かんがえる {教室|きょうしつ}')+'</h1><p style="text-align:center">'+T('だれが やるかな？')+'</p><div class="chips" id="who"></div><div id="menu"></div><div class="ver">'+APP_VERSION+'</div>');
  var w=document.getElementById('who');
  [['g2','2{年生|ねんせい}'],['g4','4{年生|ねんせい}']].forEach(function(x){
   w.appendChild(btn(x[1],S.g===x[0]?'sel':'',function(){S.g=x[0];D._last=x[0];save(D);home()}))});
@@ -210,5 +210,16 @@ function pad(c){
  var gb=btn('▦ マス{目|め}','sel',function(){grid=!grid;gb.className='btn '+(grid?'sel':'');bg()});bb.appendChild(gb);
 }
 home();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+if('serviceWorker' in navigator){
+ var hadCtl=!!navigator.serviceWorker.controller,reloaded=false;
+ navigator.serviceWorker.addEventListener('controllerchange',function(){
+  if(!hadCtl){hadCtl=true;return}// 初回インストールでは リロードしない
+  if(reloaded)return;reloaded=true;
+  try{var t=+sessionStorage.getItem('swr')||0;if(Date.now()-t<10000)return;sessionStorage.setItem('swr',String(Date.now()))}catch(e){}
+  location.reload()});
+ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){
+  reg.update();
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')reg.update()},false);
+ }).catch(function(){});
+}
 })();
