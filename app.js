@@ -65,6 +65,7 @@ function play(){
    else{S.miss++;m.innerHTML=T('{問題|もんだい}の {中|なか}の {数|かず}を もういちど さがしてみよう')}}));
  } else {
   var fb=btn('🖼 {図|ず}を {見|み}る','',function(){fb.outerHTML='<div class="fig">'+T(q.fig)+'</div>'});c.appendChild(fb);
+  pad(c);
   var d=document.createElement('div');d.style.textAlign='center';
   d.innerHTML='<input id="a" type="text" inputmode="decimal" autocomplete="off"> '+T(q.unit);c.appendChild(d);
   c.appendChild(btn('{答|こた}え{合|あ}わせ','big',function(){
@@ -130,6 +131,34 @@ function fin(){
  var n=document.getElementById('n');
  n.appendChild(btn('{話|はなし}を えらぶ','big',eps));
  n.appendChild(btn('← はじめに もどる','',home));
+}
+// ---- 筆算メモ（手書き） ----
+function pad(c){
+ var w=document.createElement('div');w.className='padw';
+ w.innerHTML='<div class="padt">'+T('✏️ {筆算|ひっさん}メモ（{指|ゆび}や ペンで {書|か}けるよ）')+'</div><canvas id="pad" class="pad"></canvas><div class="chips" id="padb"></div>';
+ c.appendChild(w);
+ var cv=w.querySelector('canvas'),x=cv.getContext('2d'),r=window.devicePixelRatio||1,er=false,grid=true,dn=false,lx=0,ly=0,W,H;
+ function size(){W=cv.offsetWidth;H=cv.offsetHeight;cv.width=W*r;cv.height=H*r;x.setTransform(r,0,0,r,0,0);x.lineCap='round';x.lineJoin='round'}
+ size();
+ function bg(){cv.style.backgroundImage=grid?'linear-gradient(#cfe0f5 1px,transparent 1px),linear-gradient(90deg,#cfe0f5 1px,transparent 1px)':'none'}
+ bg();
+ function pos(e){var b=cv.getBoundingClientRect(),t=e.touches?e.touches[0]||e.changedTouches[0]:e;return [t.clientX-b.left,t.clientY-b.top]}
+ function start(e){e.preventDefault();dn=true;var p=pos(e);lx=p[0];ly=p[1];line(lx+0.1,ly+0.1)}
+ function move(e){if(!dn)return;e.preventDefault();var p=pos(e);line(p[0],p[1])}
+ function end(e){dn=false}
+ function line(a,b){x.globalCompositeOperation=er?'destination-out':'source-over';x.strokeStyle='#123';x.lineWidth=er?28:4;
+  x.beginPath();x.moveTo(lx,ly);x.lineTo(a,b);x.stroke();lx=a;ly=b}
+ if(window.PointerEvent){cv.addEventListener('pointerdown',function(e){try{cv.setPointerCapture(e.pointerId)}catch(_){ }start(e)},false);
+  cv.addEventListener('pointermove',move,false);cv.addEventListener('pointerup',end,false);cv.addEventListener('pointercancel',end,false)}
+ else{cv.addEventListener('mousedown',start,false);window.addEventListener('mousemove',move,false);window.addEventListener('mouseup',end,false)}
+ // iOS: タッチでスクロール・ズームしないように
+ cv.addEventListener('touchstart',function(e){e.preventDefault();if(!window.PointerEvent)start(e)},false);
+ cv.addEventListener('touchmove',function(e){e.preventDefault();if(!window.PointerEvent)move(e)},false);
+ cv.addEventListener('touchend',function(e){e.preventDefault();if(!window.PointerEvent)end(e)},false);
+ var bb=w.querySelector('#padb'),eb;
+ eb=btn('🧽 けす','',function(){er=!er;eb.className='btn '+(er?'sel':'')});bb.appendChild(eb);
+ bb.appendChild(btn('🗑 ぜんぶ けす','',function(){x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);x.setTransform(r,0,0,r,0,0)}));
+ var gb=btn('▦ マス{目|め}','sel',function(){grid=!grid;gb.className='btn '+(grid?'sel':'');bg()});bb.appendChild(gb);
 }
 home();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
