@@ -92,7 +92,31 @@ function eps(){
 function face(k,side){var c=CHARS[k];
  return '<svg class="face" viewBox="0 0 80 80" width="72" height="72"><circle cx="40" cy="40" r="37" fill="#fff" stroke="#333" stroke-width="3"/>'+
   '<text x="40" y="54" font-size="42" text-anchor="middle">'+c[0]+'</text></svg><div class="nm">'+c[1]+'</div>'}
+function mpage(){
+ var e=S.ep,pg=e.pages[S.pi],h='<div class="mpage '+pg.L+'" id="pnl">';
+ pg.k.forEach(function(k,i){
+  h+='<div class="k k'+i+'"><img src="img/'+e.id+'/'+k.img+'.webp" alt="" style="object-position:'+k.pos+'">';
+  k.it.forEach(function(it){var st='left:'+it.x+'%;top:'+it.y+'%;'+(it.w?'width:'+it.w+'%;':'');
+   h+='<div class="'+(it.t==='b'?'bln t'+it.tail:it.t==='n'?'nar':'sfx')+'" style="'+st+'">'+T(it.s)+'</div>'});
+  h+='</div>'});
+ h+='</div>';
+ el('<div class="top"><span>'+T(e.title)+'</span><span>'+(S.pi+1)+' / '+e.pages.length+'</span></div>'+h+'<div class="chips" id="nav"></div>');
+ navs(e.pages.length);
+}
+function navs(n){
+ var nav=document.getElementById('nav'),last=S.pi===n-1,draw=S.ep.pages?mpage:panel;
+ function fwd(){if(!last){S.pi++;draw()}else{if(S.qi<0){S.qi=0;S.qs=0;S.qmiss=0;S.qok=0}quiz()}}
+ if(S.pi>0)nav.appendChild(btn('← まえ','',function(){S.pi--;draw()}));
+ nav.appendChild(btn(last?(S.qi>=0?'クイズに もどる →':'クイズへ →'):'つぎ →','big',fwd));
+ app.appendChild(btn('{話|はなし}を えらぶ','',eps));
+ var p=document.getElementById('pnl'),x0=null;
+ p.onclick=function(){fwd()};
+ p.addEventListener('touchstart',function(ev){x0=ev.touches[0].clientX},false);
+ p.addEventListener('touchend',function(ev){if(x0===null)return;var dx=ev.changedTouches[0].clientX-x0;x0=null;
+  if(dx<-50){ev.preventDefault();fwd()}else if(dx>50&&S.pi>0){ev.preventDefault();S.pi--;draw()}},false);
+}
 function panel(){
+ if(S.ep.pages)return mpage();
  var e=S.ep,pn=e.panels[S.pi],h='';
  pn.l.forEach(function(x,j){var side=x[0]==='h'?'l':'r';
   h+='<div class="row '+side+'"><div class="who">'+face(x[0])+'</div><div class="bub">'+T(x[1])+'</div></div>'});
