@@ -96,13 +96,38 @@ function mpage(){
  var e=S.ep,pg=e.pages[S.pi],h='<div class="mpage '+pg.L+'" id="pnl">';
  pg.k.forEach(function(k,i){
   h+='<div class="k k'+i+'"><img src="img/'+e.id+'/'+k.img+'.webp" alt="" style="object-position:'+k.pos+'">';
-  k.it.forEach(function(it){var st='left:'+it.x+'%;top:'+it.y+'%;'+(it.w?'width:'+it.w+'%;':'');
+  k.it.forEach(function(it){var st='left:'+it.x+'%;top:'+it.y+'%;'+(it.w?'max-width:'+Math.min(100-it.x-2,it.w+8)+'%;':'');
    h+='<div class="'+(it.t==='b'?'bln t'+it.tail:it.t==='n'?'nar':'sfx')+'" style="'+st+'">'+T(it.s)+'</div>'});
   h+='</div>'});
  h+='</div>';
  el('<div class="top"><span>'+T(e.title)+'</span><span>'+(S.pi+1)+' / '+e.pages.length+'</span></div>'+h+'<div class="chips" id="nav"></div>');
  navs(e.pages.length);
+ fitAll();
 }
+// 吹き出しを コマに おさめる（はみ出したら 文字を 小さく → 位置を ずらす）。効果音は 吹き出しと 重ならない 場所へ
+function rc(a){return a.getBoundingClientRect()}
+function hit(a,b){return !(a.right<=b.left||b.right<=a.left||a.bottom<=b.top||b.bottom<=a.top)}
+function over(b,k){var B=rc(b),K=rc(k),cl=b.className,tb=/tb[lr]/.test(cl)?20:0,tt=/tt[lr]/.test(cl)?20:0;return B.right>K.right-2||B.bottom+tb>K.bottom-2||B.left<K.left+2||B.top-tt<K.top+2}
+function fitAll(){
+ var ks=document.querySelectorAll('.mpage .k'),i,j,a,c;
+ for(i=0;i<ks.length;i++){var k=ks[i],K=rc(k),base=Math.max(12,Math.min(17,K.width*0.045)),bs=k.querySelectorAll('.bln,.nar');
+  for(j=0;j<bs.length;j++){var b=bs[j],f=base;
+   b.style.fontSize=f+'px';
+   while(f>10&&over(b,k)){f-=0.5;b.style.fontSize=f+'px'}
+   for(a=0;a<40&&over(b,k);a++){var B=rc(b);K=rc(k);
+    if(B.right>K.right)b.style.left=Math.max(0,b.offsetLeft-(B.right-K.right)-4)+'px';
+    if(B.bottom>K.bottom)b.style.top=Math.max(0,b.offsetTop-(B.bottom-K.bottom)-4)+'px';
+    if(B.right<=K.right&&B.bottom<=K.bottom)break}}
+  var sf=k.querySelectorAll('.sfx');K=rc(k);
+  for(j=0;j<sf.length;j++){var s=sf[j];s.style.fontSize=Math.max(18,Math.min(30,K.width*0.07))+'px';
+   var cand=[[s.offsetLeft,s.offsetTop]];for(a=0;a<6;a++)for(c=0;c<6;c++)cand.push([K.width*a/6,K.height*c/6]);
+   for(a=0;a<cand.length;a++){s.style.left=cand[a][0]+'px';s.style.top=cand[a][1]+'px';
+    var S2=rc(s),ok=S2.right<=K.right&&S2.bottom<=K.bottom;
+    for(c=0;c<bs.length&&ok;c++)if(hit(S2,rc(bs[c])))ok=false;
+    if(ok)break}
+   if(a===cand.length)s.style.display='none'}}
+}
+window.addEventListener('resize',function(){if(document.querySelector('.mpage'))mpage()},false);
 function navs(n){
  var nav=document.getElementById('nav'),last=S.pi===n-1,draw=S.ep.pages?mpage:panel;
  function fwd(){if(!last){S.pi++;draw()}else{if(S.qi<0){S.qi=0;S.qs=0;S.qmiss=0;S.qok=0}quiz()}}
