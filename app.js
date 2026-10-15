@@ -1,5 +1,5 @@
 (function(){
-var APP_VERSION='v6',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
+var APP_VERSION='v7',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
 function load(){try{return JSON.parse(localStorage.getItem('mathapp'))||{}}catch(e){return {}}}
 function save(d){try{localStorage.setItem('mathapp',JSON.stringify(d))}catch(e){}}
 var D=load();
