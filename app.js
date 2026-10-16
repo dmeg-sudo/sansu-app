@@ -1,5 +1,5 @@
 (function(){
-var APP_VERSION='v7',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
+var APP_VERSION='v8',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
 function load(){try{return JSON.parse(localStorage.getItem('mathapp'))||{}}catch(e){return {}}}
 function save(d){try{localStorage.setItem('mathapp',JSON.stringify(d))}catch(e){}}
 var D=load();
@@ -38,14 +38,23 @@ function list(){
  el('<div class="top"><span>⭐ '+p.stars+'</span></div><h1>'+T('{問題|もんだい}を {選|えら}ぼう')+'</h1><div class="chips" id="l"></div>');
  var l=document.getElementById('l');
  ps.forEach(function(q,i){l.appendChild(btn((p.done[i]?'✅ ':'')+'{問題|もんだい} '+(i+1),p.done[i]?'ok':'',function(){S.i=i;S.step=1;S.sel=[];S.miss=0;play()}))});
+ app.insertBefore(btn('🎲 おまかせ（ランダム）','big',pick),document.getElementById('l'));
  app.appendChild(btn('← もどる','',home));
+}
+// ランダム: このセッションで まだ 出していない 問題から（まだ 正解していない 問題を ゆうせん）
+function pick(){
+ var ps=PROBLEMS[S.g],p=prog(S.g);if(!S.seen)S.seen={};if(!S.seen[S.g])S.seen[S.g]={};var sn=S.seen[S.g],c=[],i;
+ for(i=0;i<ps.length;i++)if(!sn[i]&&!p.done[i])c.push(i);
+ if(!c.length)for(i=0;i<ps.length;i++)if(!sn[i])c.push(i);
+ if(!c.length){S.seen[S.g]={};sn=S.seen[S.g];for(i=0;i<ps.length;i++)if(i!==S.i)c.push(i)}
+ S.i=c[Math.floor(Math.random()*c.length)];S.step=1;S.sel=[];S.miss=0;play()
 }
 var STEPS=['','① {何|なに}を きかれている？','② {使|つか}う {数|かず}は どれ？（{全部|ぜんぶ} {選|えら}んでね）','③ どんな {式|しき}に なる？','④ {答|こた}えを {入|い}れよう'];
 function choose(c,m,arr,right,next,onMiss){shuf(arr).forEach(function(t){var b=btn(t,'',function(){
   if(t===right){b.className='btn ok';m.innerHTML=T('そうだね！ よく {読|よ}めたね 👍');next()}
   else{b.className='btn ng';onMiss();m.innerHTML=T('もういちど {問題|もんだい}を ゆっくり {読|よ}んでみよう')}});c.appendChild(b)})}
 function play(){
- var q=PROBLEMS[S.g][S.i];
+ var q=PROBLEMS[S.g][S.i];if(!S.seen)S.seen={};if(!S.seen[S.g])S.seen[S.g]={};S.seen[S.g][S.i]=1;
  el('<div class="top"><span>'+T('{問題|もんだい} ')+(S.i+1)+'</span><span>⭐ '+prog(S.g).stars+'</span></div>'+
   '<div class="q">'+T(q.q)+'</div><div class="step">'+T(STEPS[S.step])+'</div><div id="c"></div><div class="msg" id="m"></div>');
  var c=document.getElementById('c'),m=document.getElementById('m');
@@ -54,7 +63,7 @@ function play(){
  if(S.step===1)choose(c,m,q.ask,q.ask[0],next,miss);
  else if(S.step===3)choose(c,m,q.ops,q.ops[0],next,miss);
  else if(S.step===2){
-  var decoy=q.nums[0]+(S.g==='g2'?10:100),opts=q.nums.slice();
+  var decoy=q.decoy!==undefined?q.decoy:q.nums[0]+(S.g==='g2'?10:100),opts=q.nums.slice();
   if(opts.indexOf(decoy)<0)opts.push(decoy);
   var w=document.createElement('div');w.className='chips';c.appendChild(w);
   shuf(opts).forEach(function(n){var b=btn(String(n),'',function(){
@@ -67,14 +76,15 @@ function play(){
   var fb=btn('🖼 {図|ず}を {見|み}る','',function(){fb.outerHTML='<div class="fig">'+T(q.fig)+'</div>'});c.appendChild(fb);
   pad(c);
   var d=document.createElement('div');d.style.textAlign='center';
-  d.innerHTML='<input id="a" type="text" inputmode="decimal" autocomplete="off"> '+T(q.unit);c.appendChild(d);
+  d.innerHTML='<input id="a" type="text" inputmode="'+(q.frac?'text':'decimal')+'" autocomplete="off"> '+T(q.unit);c.appendChild(d);
   c.appendChild(btn('{答|こた}え{合|あ}わせ','big',function(){
-   var v=parseFloat(document.getElementById('a').value.replace(/[０-９．]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-65248)}));
+   var raw=document.getElementById('a').value.replace(/[０-９．／]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-65248)}).replace(/\s/g,''),fm=raw.match(/^(\d+)\/(\d+)$/),v=fm?(+fm[2]?fm[1]/fm[2]:NaN):parseFloat(raw);
    if(Math.abs(v-q.ans)<1e-9){var p=prog(S.g),st=S.miss===0?3:S.miss<3?2:1;
     if(!p.done[S.i]){p.stars+=st}p.done[S.i]=true;save(D);
-    el('<h1 class="done">'+T('{正解|せいかい}！ 🎉')+'</h1><p style="text-align:center;font-size:48px">'+'⭐'.repeat(st)+'</p><p style="text-align:center">'+q.ans+' '+T(q.unit)+'</p><div id="n"></div>');
+    el('<h1 class="done">'+T('{正解|せいかい}！ 🎉')+'</h1><p style="text-align:center;font-size:48px">'+'⭐'.repeat(st)+'</p><p style="text-align:center">'+(q.at||q.ans)+' '+T(q.unit)+'</p><div id="n"></div>');
     var n=document.getElementById('n');
     if(S.i+1<PROBLEMS[S.g].length)n.appendChild(btn('つぎの {問題|もんだい}','big',function(){S.i++;S.step=1;S.miss=0;play()}));
+    n.appendChild(btn('🎲 おまかせで つぎへ','',pick));
     n.appendChild(btn('{問題|もんだい} いちらん','',list));
    }else{S.miss++;m.innerHTML=T('おしい！ {式|しき}を もういちど {計算|けいさん}してみよう')}}));
  }
