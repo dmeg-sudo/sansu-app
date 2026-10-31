@@ -1,5 +1,5 @@
-var V='v8',C='math-'+V,IMG=[];for(var p=1;p<=4;p++)for(var n=1;n<=3;n++)['r1','r2','r3','t1','t2','t3'].forEach(function(e){IMG.push('img/'+e+'/p'+p+'-'+n+'.webp')});
-var CORE=['./','index.html','style.css?v=8','kanji.js?v=8','problems.js?v=8','problems_extra.js?v=8','manga.js?v=8','app.js?v=8','manifest.json','icon-192.png','icon-512.png'];
+var V='v9',C='math-'+V,IMG=[];for(var p=1;p<=4;p++)for(var n=1;n<=3;n++)['r1','r2','r3','t1','t2','t3'].forEach(function(e){IMG.push('img/'+e+'/p'+p+'-'+n+'.webp')});
+var CORE=['./','index.html','style.css?v=9','kanji.js?v=9','problems.js?v=9','problems_extra.js?v=9','geometry.js?v=9','manga.js?v=9','app.js?v=9','manifest.json','icon-192.png','icon-512.png'];
 self.addEventListener('install',function(e){self.skipWaiting();e.waitUntil(caches.open(C).then(function(c){return c.addAll(CORE.concat(IMG).map(function(u){return new Request(u,{cache:'reload'})}))}))});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
 self.addEventListener('fetch',function(e){var r=e.request;if(r.method!=='GET')return;

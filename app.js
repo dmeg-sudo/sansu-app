@@ -1,5 +1,5 @@
 (function(){
-var APP_VERSION='v8',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
+var APP_VERSION='v9',app=document.getElementById('app'),S={g:null,i:0,step:0,sel:[]};
 function load(){try{return JSON.parse(localStorage.getItem('mathapp'))||{}}catch(e){return {}}}
 function save(d){try{localStorage.setItem('mathapp',JSON.stringify(d))}catch(e){}}
 var D=load();
@@ -30,6 +30,7 @@ function home(){
  var p=prog(S.g);
  m.innerHTML='<h2>'+T('🔢 {算数|さんすう}')+'</h2>';
  m.appendChild(btn('{文章|ぶんしょう}{問題|もんだい}  ⭐'+p.stars,'big',list));
+ m.appendChild(btn('📐 {図形|ずけい}  ⭐'+gprog().gstars,'big',glist));
  var h=document.createElement('h2');h.innerHTML=T('📚 まんがで まなぶ')+'  ⭐'+mstars(p);m.appendChild(h);
  MANGA.forEach(function(tp){m.appendChild(btn(tp.icon+' '+tp.title,'big',function(){S.tp=tp;eps()}))});
 }
@@ -89,6 +90,63 @@ function play(){
    }else{S.miss++;m.innerHTML=T('おしい！ {式|しき}を もういちど {計算|けいさん}してみよう')}}));
  }
  app.appendChild(btn('← いちらんへ','',list));
+}
+// ---- 図形 ----
+function gprog(){var p=prog(S.g);if(!p.geo)p.geo={};if(!p.gstars)p.gstars=0;return p}
+function glist(){
+ var p=gprog(),ps=GEO[S.g];
+ el('<div class="top"><span>⭐ '+p.gstars+'</span></div><h1>'+T('📐 {図形|ずけい}')+'</h1><div class="chips" id="l"></div>');
+ var l=document.getElementById('l');
+ ps.forEach(function(q,i){l.appendChild(btn((p.geo[i]?'✅ ':'')+(i+1)+'. '+q.cat,p.geo[i]?'ok':'',function(){gstart(i)}))});
+ app.insertBefore(btn('🎲 おまかせ（ランダム）','big',gpick),document.getElementById('l'));
+ app.appendChild(btn('← もどる','',home));
+}
+function gpick(){var ps=GEO[S.g],p=gprog();if(!S.gseen)S.gseen={};if(!S.gseen[S.g])S.gseen[S.g]={};var sn=S.gseen[S.g],c=[],i;
+ for(i=0;i<ps.length;i++)if(!sn[i]&&!p.geo[i])c.push(i);
+ if(!c.length)for(i=0;i<ps.length;i++)if(!sn[i])c.push(i);
+ if(!c.length){S.gseen[S.g]={};for(i=0;i<ps.length;i++)if(i!==S.gi)c.push(i)}
+ gstart(c[Math.floor(Math.random()*c.length)])}
+function gstart(i){S.gi=i;S.gs=0;S.gmiss=0;S.gov='';S.glab='';if(!S.gseen)S.gseen={};if(!S.gseen[S.g])S.gseen[S.g]={};S.gseen[S.g][i]=1;gplay()}
+function gplay(){
+ var q=GEO[S.g][S.gi],st=q.steps[S.gs];
+ el('<div class="top"><span>'+T('📐 '+q.cat)+'</span><span>'+(S.gs+1)+' / '+q.steps.length+'</span></div><div class="q">'+T(q.q)+'</div>'+
+  '<div class="gwrap"><svg class="geo" viewBox="0 0 400 300" id="gsvg">'+q.svg+'<g id="glab">'+S.glab+'</g><g id="gov">'+S.gov+'</g></svg></div>'+
+  '<div class="step">'+T(st.x)+'</div><div id="c"></div><div class="msg" id="m"></div>');
+ var c=document.getElementById('c'),m=document.getElementById('m'),sv=document.getElementById('gsvg');
+ function next(){if(S.gs+1<q.steps.length){S.gs++;setTimeout(gplay,700)}else setTimeout(gdone,700)}
+ function nextBtn(){c.appendChild(btn('わかった！ つぎへ →','big',function(){S.gs++;if(S.gs<q.steps.length)gplay();else gdone()}))}
+ if(st.t==='ask'||st.t==='choice')choose(c,m,st.ch,st.ch[0],next,function(){S.gmiss++});
+ else if(st.t==='num'){
+  var d=document.createElement('div');d.style.textAlign='center';d.innerHTML='<input id="a" type="text" inputmode="decimal" autocomplete="off"> '+T(st.unit);c.appendChild(d);
+  c.appendChild(btn('{答|こた}え{合|あ}わせ','big',function(){var v=parseFloat(document.getElementById('a').value.replace(/[０-９．]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-65248)}));
+   if(Math.abs(v-st.ans)<1e-9){m.innerHTML=T('{正解|せいかい}！');next()}else{S.gmiss++;m.innerHTML=T('おしい！ もういちど たしかめてみよう')}}));
+ } else if(st.t==='tap'){
+  var got={},n=0,lab='';
+  st.ids.forEach(function(id){var g=sv.querySelector('[data-id="'+id+'"]');if(g)g.setAttribute('class','tp tg')});
+  m.innerHTML=T('タップ: 0 / '+st.ids.length);
+  sv.onclick=function(ev){var t=ev.target;while(t&&t!==sv&&!(t.getAttribute&&t.getAttribute('data-id')))t=t.parentNode;
+   if(!t||t===sv)return;var id=t.getAttribute('data-id');if(st.ids.indexOf(id)<0||got[id])return;got[id]=1;n++;t.setAttribute('class','tp on');
+   var L=st.lab&&st.lab[id],add='';
+   if(L){var arr=(L[0]&&L[0].length===2&&typeof L[0][0]==='object')?L:[L];arr.forEach(function(x){add+='<text x="'+x[0][0]+'" y="'+x[0][1]+'" class="rv">'+T(x[1])+'</text>'})}
+   if(st.count){var bb=t.getBBox?t.getBBox():null;if(bb)add+='<circle cx="'+(bb.x+bb.width/2)+'" cy="'+(bb.y+bb.height/2)+'" r="17" class="cn"/><text x="'+(bb.x+bb.width/2)+'" y="'+(bb.y+bb.height/2+7)+'" class="cnt">'+n+'</text>'}
+   document.getElementById('glab').insertAdjacentHTML('beforeend',add);
+   m.innerHTML=T('タップ: '+n+' / '+st.ids.length);
+   if(n===st.ids.length){S.glab=document.getElementById('glab').innerHTML;sv.onclick=null;m.innerHTML=T('ぜんぶ たしかめたね！ '+(st.after||''));nextBtn()}};
+ } else if(st.t==='check'){
+  var done={},k=0,w=document.createElement('div');w.className='chips';c.appendChild(w);
+  st.items.forEach(function(it,i){var b=btn('🔍 '+it.b,'',function(){
+   document.getElementById('gov').innerHTML=it.ov;m.innerHTML=T(it.b+'：'+it.res);b.className='btn '+(it.ok?'ok':'sel');
+   if(!done[i]){done[i]=1;k++;if(k===st.items.length){S.gov='';nextBtn()}}});w.appendChild(b)});
+ }
+ app.appendChild(btn('← いちらんへ','',glist));
+}
+function gdone(){
+ var p=gprog(),st=S.gmiss===0?3:S.gmiss<3?2:1;if(!p.geo[S.gi])p.gstars+=st;p.geo[S.gi]=1;save(D);
+ el('<h1 class="done">'+T('{正解|せいかい}！ 🎉')+'</h1><p style="text-align:center;font-size:48px">'+'⭐'.repeat(st)+'</p><div id="n"></div>');
+ var n=document.getElementById('n');
+ if(S.gi+1<GEO[S.g].length)n.appendChild(btn('つぎの {問題|もんだい}','big',function(){gstart(S.gi+1)}));
+ n.appendChild(btn('🎲 おまかせで つぎへ','',gpick));
+ n.appendChild(btn('{問題|もんだい} いちらん','',glist));
 }
 // ---- まんが ----
 function eps(){

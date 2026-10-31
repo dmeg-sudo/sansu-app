@@ -48,3 +48,28 @@ ruby rt{font-size:0.5em}
 .sfx{position:absolute;z-index:2;font-weight:900;font-size:34px;color:#fff;-webkit-text-stroke:2px #000;text-shadow:3px 3px 0 #000;-webkit-transform:rotate(-10deg);transform:rotate(-10deg);white-space:nowrap;font-style:italic;pointer-events:none}
 .bln ruby rt,.nar ruby rt{font-size:0.5em}
 .ver{text-align:right;font-size:14px;color:#999;margin-top:20px}
+/* 図形 */
+.gwrap{background:#fff;border:3px solid #ddd;border-radius:18px;margin:12px 0;padding:6px}
+svg.geo{display:block;width:100%;max-height:52vh;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.geo .vis{stroke:#234;stroke-width:4;fill:none;stroke-linecap:round}
+.geo .vis.dg,.geo .dg{stroke:#678;stroke-width:3;stroke-dasharray:8 7;fill:none}
+.geo .hit{stroke:rgba(0,0,0,0);stroke-width:36;fill:rgba(0,0,0,0)}
+.geo circle.hit{stroke-width:0}
+.geo .vx{fill:#234}
+.geo .fillq{fill:#fdf3d6;stroke:none}
+.geo .face{fill:#e9f2fb;stroke:#234;stroke-width:3}
+.geo .ss{fill:rgba(120,170,230,.35);stroke:#234;stroke-width:3}
+.geo .tg .vis,.geo .tg .face,.geo .tg polygon{stroke:#f0a020}
+.geo .on .vis,.geo .on polygon{stroke:#e04a00;stroke-width:6}
+.geo .on .face,.geo .on .ss{fill:#ffe2b8}
+.geo .lb,.geo .nm{font-size:20px;font-weight:bold;fill:#234;text-anchor:middle;dominant-baseline:middle}
+.geo .gl{font-size:17px;fill:#a33;font-weight:bold;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.geo .al{font-size:22px;fill:#c40;font-weight:bold;text-anchor:middle;dominant-baseline:middle}
+.geo .rv{font-size:16px;fill:#063;font-weight:bold;text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.geo .cn{fill:#e04a00}.geo .cnt{fill:#fff;font-size:18px;font-weight:bold;text-anchor:middle}
+.geo .ar{fill:none;stroke:#c40;stroke-width:3}.geo .ar2{stroke:#06c}
+.geo .gp{stroke:#c00;stroke-width:3;stroke-dasharray:5 4}
+.geo .sq{fill:rgba(60,140,230,.45);stroke:#1a5fb4;stroke-width:2}.geo .sqm{fill:none;stroke:#fff;stroke-width:2}
+.geo .pr{fill:rgba(200,230,255,.5);stroke:#58a;stroke-width:2}.geo .tk{stroke:#58a;stroke-width:1.5}
+.geo .so{font-size:13px;fill:#246;text-anchor:middle;dominant-baseline:middle}.geo .si{font-size:11px;fill:#a50;text-anchor:middle;dominant-baseline:middle}
+.geo .ray{stroke:#222;stroke-width:3}
